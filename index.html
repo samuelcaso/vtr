@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Proyecto Spline VR</title>
+  
+  <!-- Estilos básicos -->
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      font-family: Arial, sans-serif;
+    }
+    
+    canvas { 
+      display: block; 
+      width: 100vw; 
+      height: 100vh; 
+    }
+    
+    #vr-button {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    
+    #vr-button:hover {
+      background: #4f46e5;
+    }
+  </style>
+</head>
+<body>
+  <!-- Aquí se carga tu escena de Spline -->
+  <canvas id="canvas3d"></canvas>
+  
+  <!-- Botón para entrar en VR -->
+  <button id="vr-button">Entrar en VR 🥽</button>
+
+  <!-- Script de Spline Runtime -->
+  <script type="module">
+    import { Application } from 'https://unpkg.com/@splinetool/runtime@1.9.28/build/runtime.js';
+
+    const canvas = document.getElementById('canvas3d');
+    const spline = new Application(canvas);
+    
+    // ⬇️ PEGA AQUÍ TU URL DE SPLINE ⬇️
+    const TU_URL_SPLINE = 'https://my.spline.design/galeriamejorada-pgWeRUBIwdYIoJn8Dfk9znpc/';
+    
+    // Cargar tu escena
+    spline.load(TU_URL_SPLINE).then(() => {
+      console.log('✅ Escena de Spline cargada');
+      
+      // Ajustes para VR (puedes modificar estos valores)
+      const scene = spline._scene;
+      
+      // Escala: si tu escena se ve MUY GRANDE en VR, reduce estos números
+      // Si se ve muy pequeña, aumentalos
+      scene.scale.set(1, 1, 1); // Empieza con 1, luego ajusta
+      
+      // Posición: mueve la escena adelante/atrás/arriba/abajo
+      scene.position.set(0, 0, -2); // x, y, z
+    });
+
+    // Configurar botón VR
+    const vrButton = document.getElementById('vr-button');
+    
+    vrButton.addEventListener('click', async () => {
+      if (!navigator.xr) {
+        alert('Tu navegador no soporta WebXR. Ábrelo en las gafas Meta Quest.');
+        return;
+      }
+      
+      try {
+        const session = await navigator.xr.requestSession('immersive-vr');
+        console.log('🥽 Modo VR activado');
+        
+        // Configurar el canvas para VR
+        const gl = canvas.getContext('webgl2', { xrCompatible: true });
+        await gl.makeXRCompatible();
+        
+        // Iniciar sesión VR
+        spline._renderer.xr.enabled = true;
+        spline._renderer.xr.setSession(session);
+        
+        // Ocultar botón cuando estés en VR
+        vrButton.style.display = 'none';
+        
+        session.addEventListener('end', () => {
+          vrButton.style.display = 'block';
+          console.log('👋 Saliste de VR');
+        });
+        
+      } catch (error) {
+        console.error('Error al iniciar VR:', error);
+        alert('No se pudo iniciar VR. Asegúrate de estar en las gafas Meta Quest.');
+      }
+    });
+    
+  </script>
+</body>
+</html>
